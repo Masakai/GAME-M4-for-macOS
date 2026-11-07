@@ -1,11 +1,14 @@
 #!/bin/bash
-# GAME-M4.app を dist/ に作る。署名は ad-hoc(開発者 ID なし)で、公証はしない(設計書 M14)。
+# GAME-M4.app を dist/ に作る。既定の署名は ad-hoc(開発者 ID なし)で、公証はしない(設計書 M14)。
 # 使い方: Tools/build_app.sh
+# 環境変数: GAMEM4_VERSION(版番号)、GAMEM4_SIGN_IDENTITY(署名の名前かハッシュ。
+#           指定すると Hardened Runtime とタイムスタンプを付ける。公証は build-notarize.sh で行う)
 # ビルドの作業領域は Dropbox の外(~/Library/Caches/GAME-M4/build)に置く(設計書 M13)。
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 VERSION="${GAMEM4_VERSION:-0.1.0}"
+IDENTITY="${GAMEM4_SIGN_IDENTITY:--}"
 SCRATCH="$HOME/Library/Caches/GAME-M4/build"
 APP="dist/GAME-M4.app"
 
@@ -48,6 +51,13 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 </plist>
 PLIST
 
-codesign --force --sign - "$APP/Contents/MacOS/gamem4"
-codesign --force --sign - "$APP"
+if [ "$IDENTITY" = "-" ]; then
+    codesign --force --sign - "$APP/Contents/MacOS/gamem4"
+    codesign --force --sign - "$APP"
+else
+    # 同梱した CLI を先に署名してから、アプリ全体を署名する
+    codesign --force --options runtime --timestamp --sign "$IDENTITY" "$APP/Contents/MacOS/gamem4"
+    codesign --force --options runtime --timestamp --sign "$IDENTITY" "$APP"
+fi
+codesign --verify --deep --strict "$APP"
 echo "作成した: $APP"

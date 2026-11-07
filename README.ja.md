@@ -28,7 +28,7 @@ swift build --scratch-path ~/Library/Caches/GAME-M4/build
 Tools/build_app.sh
 ```
 
-`Tools/build_app.sh` は `dist/GAME-M4.app` を作ります。署名は ad-hoc です。`gamem4` も `GAME-M4.app/Contents/MacOS/gamem4` に入ります。
+`Tools/build_app.sh` は `dist/GAME-M4.app` を作ります。既定の署名は ad-hoc です。環境変数 `GAMEM4_SIGN_IDENTITY` に Developer ID の証明書を指定すると、Hardened Runtime とタイムスタンプを付けて署名します(公証は別に `xcrun notarytool` で行います)。`gamem4` も `GAME-M4.app/Contents/MacOS/gamem4` に入ります。
 
 ## 使い方
 
